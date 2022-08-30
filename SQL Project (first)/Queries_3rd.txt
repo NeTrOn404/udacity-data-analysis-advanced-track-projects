@@ -1,0 +1,74 @@
+Q1
+Who is the best customers in America according to purchases?
+
+
+SELECT Cus.FirstName, CuS.LastName,
+ SUM(Ino.total) AS Total
+from Customer Cus
+JOIN Invoice Ino
+ON Cus.CustomerId=Ino.CustomerId
+where Cus.Country="USA"
+GROUP BY Cus.CustomerId 
+ORDER BY sum(Ino.total) DESC;
+
+
+Q2
+Who is the most artist writing the rock music?
+
+
+SELECT Art.NAME,
+       COUNT(Tr.NAME)
+FROM TRACK Tr
+JOIN GENRE Gen ON Tr.GENREID = Gen.GENREID
+JOIN ALBUM Alb ON Alb.ALBUMID = Tr.ALBUMID
+JOIN ARTIST Art ON Art.ARTISTID = Alb.ARTISTID
+WHERE Gen.NAME = 'Rock'
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
+
+
+Q3
+which artist has earned the most according to the InvoiceLines?
+
+
+SELECT Art.Name,
+       SUM(InoLi.Quantity * InoLi.UnitPrice) AS AmountSpent
+FROM Artist Art
+JOIN Album Alb ON Art.ArtistId = Alb.ArtistId
+JOIN Track Tr ON Tr.AlbumId = Alb.AlbumId
+JOIN InvoiceLine InoLi ON Tr.TrackId = InoLi.Trackid
+GROUP BY Art.Name
+ORDER BY AmountSpent DESC;
+
+
+
+Q4
+What is the most popular music Genre for each country?
+
+
+WITH T1 AS
+  (SELECT COUNT(Ino.InvoiceId) Purchases,
+          Cus.Country,
+          Gen.Name,
+          Gen.GenreId
+   FROM Invoice Ino
+   JOIN Customer Cus ON Ino.CustomerId = Cus.CustomerId
+   JOIN InvoiceLine InoLi ON InoLi.Invoiceid = Ino.InvoiceId
+   JOIN Track Tr ON Tr.TrackId = InoLi.Trackid
+   JOIN Genre Gen ON Tr.GenreId = Gen.GenreId
+   GROUP BY Cus.Country,
+            Gen.Name
+   ORDER BY Cus.Country,
+            Purchases,
+            Gen.GenreId DESC)
+SELECT T1.*
+FROM T1
+JOIN
+  (SELECT MAX(Purchases) AS MaxPurchases,
+          Country,
+          Name,
+          GenreId
+   FROM T1
+   GROUP BY Country)T2 ON T1.Country = T2.Country
+WHERE T1.Purchases = T2.MaxPurchases;
